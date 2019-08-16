@@ -3,14 +3,16 @@ function Food(
     y = random(50, height - 50),
     d = 10
 ) {
-    this.x = x;
-    this.y = y;
+    this.position = createVector(x, y);
     this.d = d;
+
 
     this.show = function(r = 0, g = 0, b = 255) {
         fill(r, g, b);
         noStroke();
-        circle(this.x, this.y, this.d);
+        ellipse(this.position.x, this.position.y, this.d, this.d);
 
     }
+
+
 }

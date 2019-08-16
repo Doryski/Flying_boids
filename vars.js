@@ -4,7 +4,7 @@ var canvasParams = {
 }
 
 let bubbles = [];
-var numOfBubbles = 10;
+var numOfBubbles = 5;
 
 let foods = [];
-var numOfFood = 5;
+var numOfFood = 1;
