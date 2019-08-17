@@ -23,7 +23,8 @@ function draw() {
         i.move(foods, target);
         // i.move();
         i.show();
-        i.bounceBall();
+        i.bounce();
+        i.avoidBoundaries();
         // for (let other of bubbles) {
         //     if (i !== other && i.bumpedInto(other)) {
         //         i.changeDirection();
