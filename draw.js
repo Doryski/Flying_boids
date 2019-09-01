@@ -12,24 +12,33 @@ function setup() {
 
 // draw is infinite loop
 function draw() {
-    background(255, 255, 255);
+    background(0, 0, 0);
 
-    var target = createVector(mouseX, mouseY);
-
+    // if (random(1) < 0.05) {
+    //     foods.push(new Food());
+    // }
+    // if (random(1) < 0.05) {
+    //     foods.shift();
+    // }
     for (let j of foods) {
         j.show();
     }
-    for (let i of bubbles) {
-        i.move(foods, target);
-        // i.move();
-        i.show();
-        i.bounce();
-        i.avoidBoundaries();
-        // for (let other of bubbles) {
-        //     if (i !== other && i.bumpedInto(other)) {
-        //         i.changeDirection();
-        //         other.changeDirection();
-        //     }
+    // since then
+    for (let i = 0; i < bubbles.length; i++) {
+        var targets = [
+            createVector(mouseX, mouseY)
+        ];
+        bubbles[i].move(foods, targets);
+        bubbles[i].show();
+        for (let other of bubbles) {
+            if (bubbles[i] !== other) {
+                bubbles[i].avoidOthers(other);
+            }
+        }
+        //     //         bubbles[i].changeDirection();
+        //     //         other.changeDirection();
+        //     //     }
+        //     // }
         // }
     }
 }

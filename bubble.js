@@ -7,10 +7,11 @@ function Bubble(
     this.position = createVector(this.x, this.y);
     this.velocity = createVector(random(-3, 3), random(-3, 3));
     this.acceleration = createVector(0, 0);
-    this.maxspeed = 5;
+    this.maxspeed = 3;
     this.maxforce = 0.1;
 
     this.avoidRange = 150;
+    this.center = createVector(width / 2, height / 2);
 
     this.show = function(r = 0, g = 255, b = 0) {
         var angle = this.velocity.heading() + PI / 2;
@@ -27,103 +28,117 @@ function Bubble(
         vertex(this.sideL, this.sideL * 2);
         endShape(CLOSE);
 
+        stroke(255);
+        line(0, 0, 0, 30);
+
         pop();
     }
 
-    this.move = function(toPursue, toAvoid) { //make toAvoid as a list
+    this.move = function(toPursue, toAvoid) {
         this.position.add(this.velocity.x, this.velocity.y);
         this.velocity.add(this.acceleration);
         this.velocity.limit(this.maxspeed);
         this.acceleration.mult(0);
-        // this.avoid(toAvoid);
+        this.avoidBoundaries();
+
         for (let i = 0; i < toPursue.length; i++) {
-            // this.pursue(toPursue[i]);
-            var undesiredDist = this.position.dist(toAvoid);
-            var desiredDist = this.position.dist(toPursue[i].position);
-            var objectDist = toAvoid.dist(toPursue[i].position);
+            for (let j = 0; j < toAvoid.length; j++) {
+                var undesiredDist = this.position.dist(toAvoid[j]);
+                var desiredDist = this.position.dist(toPursue[i].position);
+                var objectDist = toAvoid[j].dist(toPursue[i].position);
 
-            var desired = p5.Vector.sub(toPursue[i].position, this.position);
-            desired.setMag(this.maxspeed);
-            //map(desired, 0, this.maxforce, desiredDist, 0) as setMag();
-            var undesired = p5.Vector.sub(this.position, toAvoid);
-            undesired.setMag(this.maxspeed);
-
-            if (
-                (desiredDist < undesiredDist) &&
-                (objectDist > desiredDist)) {
-                // steering = desired - velocity
-                var steer = p5.Vector.sub(desired, this.velocity);
-                steer.limit(this.maxforce);
-
-                this.applyForce(steer);
-            } else if (
-                (desiredDist < undesiredDist && undesiredDist < this.avoidRange) ||
-                (undesiredDist < this.avoidRange)) {
-                var steer = p5.Vector.sub(undesired, this.velocity);
-                steer.limit(this.maxforce);
-
-                this.applyForce(steer);
-            }
-        }
-
-        // for (let j = 0; j < toAvoid.length; j++{
-        //     this.avoid(toAvoid[j]);
-        // }
-    }
-
-    // this.avoid = function(object) {
-    //     var undesiredDist = this.position.dist(object);
-    //     if (undesiredDist < 200) {
-    //         var undesired = p5.Vector.sub(this.position, object);
-    //         undesired.setMag(this.maxspeed);
-    //         var steer = p5.Vector.sub(undesired, this.velocity);
-    //         steer.limit(this.maxforce);
-
-    //         this.applyForce(steer);
-    //     }
-    // }
-    // this.pursue = function(object) {
-    //     var desiredDist = this.position.dist(object.position);
-    //     if (desiredDist < 100) {
-    //         var desired = p5.Vector.sub(object.position, this.position);
-    //         desired.setMag(this.maxspeed);
-    //         // steering = desired - velocity
-    //         var steer = p5.Vector.sub(desired, this.velocity);
-    //         steer.limit(this.maxforce);
-
-    //         this.applyForce(steer);
-    //     }
-    // }
-
-    this.bounce = function() {
-        if (this.position.x >= width - this.sideL * 2 || this.position.x <= 0 + this.sideL * 2) {
-            this.velocity.x *= -1;
-        }
-        if (this.position.y >= height - this.sideL * 2 || this.position.y <= 0 + this.sideL * 2) {
-            this.velocity.y *= -1;
-        }
-    }
-
-    this.avoidBoundaries = function() {
-        boundaries = [createVector(0, this.position.y),
-            createVector(width, this.position.y),
-            createVector(this.position.x, 0),
-            createVector(this.position.x, height)
-        ];
-        for (i = 0; i < boundaries.length; i++) {
-            var undesiredDist = this.position.dist(boundaries[i]);
-            var avoidRange = this.sideL * 4;
-            if (undesiredDist < avoidRange) {
-                var undesired = p5.Vector.sub(this.position, boundaries[i]);
+                var desired = p5.Vector.sub(toPursue[i].position, this.position);
+                desired.setMag(this.maxspeed);
+                var undesired = p5.Vector.sub(this.position, toAvoid[j]);
                 undesired.setMag(this.maxspeed);
-                var steer = p5.Vector.sub(undesired, this.velocity);
-                steer.limit(this.maxforce);
 
-                this.applyForce(steer);
+                if (
+                    (desiredDist < undesiredDist) &&
+                    (desiredDist < this.avoidRange) &&
+                    (objectDist > desiredDist)) {
+                    // steering = desired - velocity
+                    var steer = p5.Vector.sub(desired, this.velocity);
+                    steer.limit(this.maxforce);
+
+                    this.applyForce(steer);
+                } else if (
+                    undesiredDist < this.avoidRange) {
+                    var steer = p5.Vector.sub(undesired, this.velocity);
+                    steer.limit(this.maxforce);
+
+                    this.applyForce(steer);
+                }
             }
         }
     }
 
+    // boids avoid each other
+    this.avoidOthers = function(object) {
+        var undesiredDist = this.position.dist(object.position);
+        if (undesiredDist < 150) {
+            var undesired = p5.Vector.sub(this.position, object.position);
+            undesired.setMag(this.maxspeed);
+            var steer = p5.Vector.sub(undesired, -this.velocity);
+            steer.limit(this.maxforce);
+
+            this.applyForce(steer);
+        }
+    }
+
+    // boids avoid canvas boundaries
+    this.avoidBoundaries = function() {
+        var avoidRange = this.sideL * 10;
+
+        if (height - this.position.y < avoidRange && this.position.y < height) {
+            let undesired = p5.Vector.sub(this.position,
+                createVector(this.position.x, height));
+            undesired.setMag(this.maxspeed);
+            var steer = p5.Vector.sub(undesired, -this.velocity);
+            steer.limit(this.maxforce);
+
+            this.applyForce(steer);
+        } else if (width - this.position.x < avoidRange && this.position.x < width) {
+            let undesired = p5.Vector.sub(this.position,
+                createVector(width, this.position.y));
+            undesired.setMag(this.maxspeed);
+            var steer = p5.Vector.sub(undesired, -this.velocity);
+            steer.limit(this.maxforce);
+
+            this.applyForce(steer);
+        } else if (this.position.y - 0 < avoidRange && this.position.y > 0) {
+            let undesired = p5.Vector.sub(this.position,
+                createVector(this.position.x, 0));
+            undesired.setMag(this.maxspeed);
+            var steer = p5.Vector.sub(undesired, -this.velocity);
+            steer.limit(this.maxforce);
+
+            this.applyForce(steer);
+        } else if (this.position.x - 0 < avoidRange && this.position.x > 0) {
+            let undesired = p5.Vector.sub(this.position,
+                createVector(0, this.position.y));
+            undesired.setMag(this.maxspeed);
+            var steer = p5.Vector.sub(undesired, -this.velocity);
+            steer.limit(this.maxforce);
+
+            this.applyForce(steer);
+        } else { this.comeBack() }
+    }
+
+
+    // boids can come back to canvas if went out
+    this.comeBack = function() {
+        if (this.position.x < 0 || this.position.x > width ||
+            this.position.y < 0 || this.position.y > height) {
+            var toCenter = p5.Vector.sub(this.center, this.position);
+            toCenter.setMag(this.maxspeed);
+            var steer = p5.Vector.sub(toCenter, this.velocity);
+            steer.limit(this.maxforce);
+
+            this.applyForce(steer);
+        }
+    }
+
+    // true if boids bumped into each other
     this.bumpedInto = function(other) {
         let distance = dist(this.position.x, this.position.y, other.position.x, other.position.y);
         return (distance < (this.sideL * 2 + other.sideL * 2));
@@ -139,3 +154,7 @@ function Bubble(
         this.acceleration.add(force);
     }
 }
+
+// crete wages for boundaries and objects:
+// most importantly avoid boundaries, then avoid other boids,
+// finally pursue food
