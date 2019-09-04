@@ -11,7 +11,6 @@ function Food(
         fill(r, g, b);
         noStroke();
         ellipse(this.position.x, this.position.y, this.d, this.d);
-
     }
 
 

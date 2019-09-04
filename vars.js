@@ -3,8 +3,8 @@ var canvasParams = {
     y: 550
 }
 
-let bubbles = [];
-var numOfBubbles = 10;
+let boids = [];
+var numOfBoids = 10;
 
 let foods = [];
-var numOfFood = 10;
+var numOfFood = 1;

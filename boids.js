@@ -1,4 +1,4 @@
-function Bubble(
+function Boid(
     x = random(50, width - 50),
     y = random(50, height - 50)) {
     this.x = x;
@@ -8,9 +8,9 @@ function Bubble(
     this.velocity = createVector(random(-3, 3), random(-3, 3));
     this.acceleration = createVector(0, 0);
     this.maxspeed = 3;
-    this.maxforce = 0.1;
+    this.maxforce = this.maxspeed / 6;
 
-    this.avoidRange = 150;
+    this.avoidRange = 50;
     this.center = createVector(width / 2, height / 2);
 
     this.show = function(r = 0, g = 255, b = 0) {
@@ -28,13 +28,13 @@ function Bubble(
         vertex(this.sideL, this.sideL * 2);
         endShape(CLOSE);
 
-        stroke(255);
-        line(0, 0, 0, 30);
+        // stroke(255);
+        // line(0, 0, 0, 30);
 
         pop();
     }
 
-    this.move = function(toPursue, toAvoid) {
+    this.move = function(toPursue, toAvoid, pursueRange = 50, avoidRange = 60) {
         this.position.add(this.velocity.x, this.velocity.y);
         this.velocity.add(this.acceleration);
         this.velocity.limit(this.maxspeed);
@@ -54,7 +54,7 @@ function Bubble(
 
                 if (
                     (desiredDist < undesiredDist) &&
-                    (desiredDist < this.avoidRange) &&
+                    (desiredDist < pursueRange) &&
                     (objectDist > desiredDist)) {
                     // steering = desired - velocity
                     var steer = p5.Vector.sub(desired, this.velocity);
@@ -62,7 +62,7 @@ function Bubble(
 
                     this.applyForce(steer);
                 } else if (
-                    undesiredDist < this.avoidRange) {
+                    undesiredDist < avoidRange) {
                     var steer = p5.Vector.sub(undesired, this.velocity);
                     steer.limit(this.maxforce);
 
@@ -72,10 +72,10 @@ function Bubble(
         }
     }
 
-    // boids avoid each other
-    this.avoidOthers = function(object) {
+    // avoidboids avoid each other
+    this.avoid = function(object, avoidRange = this.sideL * 5) {
         var undesiredDist = this.position.dist(object.position);
-        if (undesiredDist < 150) {
+        if (undesiredDist < avoidRange) {
             var undesired = p5.Vector.sub(this.position, object.position);
             undesired.setMag(this.maxspeed);
             var steer = p5.Vector.sub(undesired, -this.velocity);
@@ -86,9 +86,7 @@ function Bubble(
     }
 
     // boids avoid canvas boundaries
-    this.avoidBoundaries = function() {
-        var avoidRange = this.sideL * 10;
-
+    this.avoidBoundaries = function(avoidRange = this.sideL * 4) {
         if (height - this.position.y < avoidRange && this.position.y < height) {
             let undesired = p5.Vector.sub(this.position,
                 createVector(this.position.x, height));
@@ -141,7 +139,7 @@ function Bubble(
     // true if boids bumped into each other
     this.bumpedInto = function(other) {
         let distance = dist(this.position.x, this.position.y, other.position.x, other.position.y);
-        return (distance < (this.sideL * 2 + other.sideL * 2));
+        return (distance < (this.sideL * 4 + other.sideL * 4));
     }
 
     this.changeDirection = function() {
@@ -154,7 +152,3 @@ function Bubble(
         this.acceleration.add(force);
     }
 }
-
-// crete wages for boundaries and objects:
-// most importantly avoid boundaries, then avoid other boids,
-// finally pursue food
